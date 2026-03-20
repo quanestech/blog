@@ -1,0 +1,78 @@
+{
+  "url": "https://api.github.com/repos/quanestech/blog/issues/1",
+  "repository_url": "https://api.github.com/repos/quanestech/blog",
+  "labels_url": "https://api.github.com/repos/quanestech/blog/issues/1/labels{/name}",
+  "comments_url": "https://api.github.com/repos/quanestech/blog/issues/1/comments",
+  "events_url": "https://api.github.com/repos/quanestech/blog/issues/1/events",
+  "html_url": "https://github.com/quanestech/blog/issues/1",
+  "id": 4109015112,
+  "node_id": "I_kwDORsYTV8706phI",
+  "number": 1,
+  "title": "[DevOps] Deploy OpenLDAP + MySQL",
+  "user": {
+    "login": "quanestech",
+    "id": 269772838,
+    "node_id": "U_kgDOEBRoJg",
+    "avatar_url": "https://avatars.githubusercontent.com/u/269772838?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/quanestech",
+    "html_url": "https://github.com/quanestech",
+    "followers_url": "https://api.github.com/users/quanestech/followers",
+    "following_url": "https://api.github.com/users/quanestech/following{/other_user}",
+    "gists_url": "https://api.github.com/users/quanestech/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/quanestech/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/quanestech/subscriptions",
+    "organizations_url": "https://api.github.com/users/quanestech/orgs",
+    "repos_url": "https://api.github.com/users/quanestech/repos",
+    "events_url": "https://api.github.com/users/quanestech/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/quanestech/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "labels": [
+
+  ],
+  "state": "open",
+  "locked": false,
+  "assignees": [
+
+  ],
+  "milestone": null,
+  "comments": 0,
+  "created_at": "2026-03-20T17:05:24Z",
+  "updated_at": "2026-03-20T17:05:24Z",
+  "closed_at": null,
+  "assignee": null,
+  "author_association": "OWNER",
+  "active_lock_reason": null,
+  "sub_issues_summary": {
+    "total": 0,
+    "completed": 0,
+    "percent_completed": 0
+  },
+  "issue_dependencies_summary": {
+    "blocked_by": 0,
+    "total_blocked_by": 0,
+    "blocking": 0,
+    "total_blocking": 0
+  },
+  "body": "# Deployment Record\n\nThis is a test issue for the blog.",
+  "closed_by": null,
+  "reactions": {
+    "url": "https://api.github.com/repos/quanestech/blog/issues/1/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "timeline_url": "https://api.github.com/repos/quanestech/blog/issues/1/timeline",
+  "performed_via_github_app": null,
+  "state_reason": null,
+  "pinned_comment": null
+}
