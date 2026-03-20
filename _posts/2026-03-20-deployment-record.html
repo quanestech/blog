@@ -1,18 +1,183 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>[DevOps] Deploy OpenLDAP + MySQL</title>
-<style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:800px;margin:0auto;padding:20px;line-height:1.6}
-code{background:#f6f8fa;padding:2px 6px;border-radius:3px}
-pre{background:#f6f8fa;padding:15px;border-radius:6px;overflow-x:auto}
-a{color:#0366d6}
-</style></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[DevOps] OpenLDAP + MySQL 完整部署指南 - CryptoX Blog</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #333; }
+        h1 { color: #24292e; border-bottom: 2px solid #0366d6; padding-bottom: 10px; }
+        h2 { color: #24292e; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 30px; }
+        h3 { color: #24292e; }
+        code { background: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; }
+        pre { background: #f6f8fa; padding: 15px; border-radius: 6px; overflow-x: auto; }
+        pre code { background: none; padding: 0; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f6f8fa; }
+        a { color: #0366d6; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back { margin-bottom: 20px; }
+        .date { color: #6a737d; font-size: 0.9em; }
+        hr { border: none; border-top: 1px solid #eee; margin: 30px 0; }
+    </style>
+</head>
 <body>
-<p><a href="../index.html">← Back</a></p>
-<h1>[DevOps] Deploy OpenLDAP + MySQL</h1>
-<p>2026-03-20</p>
-<hr>
-<h1>Deployment Record</h1>
+    <p class="back"><a href="../index.html">← 返回首页</a></p>
+    <h1>OpenLDAP + MySQL 完整部署指南</h1>
+    <p class="date">2026-03-20</p>
+    <hr>
 
-This is a test issue for the blog.
-</body></html>
+    <h2>环境概述</h2>
+    <ul>
+        <li>操作系统: Linux (Ubuntu)</li>
+        <li>部署方式: Docker容器</li>
+        <li>OpenLDAP: osixia/openldap</li>
+        <li>MySQL: mysql:latest</li>
+        <li>域名: cryptox.io</li>
+    </ul>
+
+    <h2>一、部署 OpenLDAP</h2>
+
+    <h3>1.1 拉取镜像</h3>
+    <pre><code>docker pull osixia/openldap:latest</code></pre>
+
+    <h3>1.2 启动容器</h3>
+    <pre><code>docker run -d --name openldap \
+  --hostname ldap.cryptox.io \
+  -p 389:389 -p 636:636 \
+  -e LDAP_ORGANISATION="CryptoX" \
+  -e LDAP_DOMAIN="cryptox.io" \
+  -e LDAP_ADMIN_PASSWORD="admin" \
+  osixia/openldap:latest</code></pre>
+
+    <h3>1.3 验证安装</h3>
+    <pre><code>docker exec openldap ldapsearch -x -H ldap://localhost -b "dc=cryptox,dc=io" \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin</code></pre>
+
+    <h2>二、创建管理员账号</h2>
+
+    <h3>2.1 生成密码哈希</h3>
+    <pre><code>docker exec openldap slappasswd -s YourPassword</code></pre>
+
+    <h3>2.2 创建用户 LDIF 文件</h3>
+    <pre><code>dn: cn=quan,dc=cryptox,dc=io
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: quan
+sn: Admin
+givenName: Quan
+displayName: Quan Admin
+uid: quan
+uidNumber: 1000
+gidNumber: 1000
+userPassword: {SSHA}你的哈希值
+homeDirectory: /home/quan
+loginShell: /bin/bash</code></pre>
+
+    <h3>2.3 添加用户</h3>
+    <pre><code>docker exec openldap ldapadd -x -H ldap://localhost \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin -f /tmp/quan.ldif</code></pre>
+
+    <h2>三、创建用户组</h2>
+
+    <h3>3.1 管理员组</h3>
+    <pre><code>dn: cn=admins,dc=cryptox,dc=io
+objectClass: groupOfNames
+cn: admins
+member: cn=quan,dc=cryptox,dc=io</code></pre>
+
+    <h3>3.2 普通用户组</h3>
+    <pre><code>dn: cn=users,dc=cryptox,dc=io
+objectClass: groupOfNames
+cn: users
+member: cn=quan,dc=cryptox,dc=io</code></pre>
+
+    <h2>四、部署 MySQL</h2>
+
+    <h3>4.1 拉取镜像</h3>
+    <pre><code>docker pull mysql:latest</code></pre>
+
+    <h3>4.2 启动容器</h3>
+    <pre><code>docker run -d --name mysql-ldap \
+  -e MYSQL_ROOT_PASSWORD=root123 \
+  -e MYSQL_DATABASE=ldap \
+  -e MYSQL_USER=ldap \
+  -e MYSQL_PASSWORD=ldap123 \
+  -p 3306:3306 \
+  mysql:latest</code></pre>
+
+    <h2>五、常用 LDAP 命令</h2>
+
+    <h3>查看所有条目</h3>
+    <pre><code>ldapsearch -x -H ldap://localhost -b "dc=cryptox,dc=io" \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin</code></pre>
+
+    <h3>搜索特定用户</h3>
+    <pre><code>ldapsearch -x -H ldap://localhost -b "dc=cryptox,dc=io" \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin "(cn=quan)"</code></pre>
+
+    <h3>添加新用户</h3>
+    <pre><code>ldapadd -x -H ldap://localhost -D "cn=admin,dc=cryptox,dc=io" \
+  -w admin -f newuser.ldif</code></pre>
+
+    <h3>删除用户</h3>
+    <pre><code>ldapdelete -x -H ldap://localhost -D "cn=admin,dc=cryptox,dc=io" \
+  -w admin "cn=username,dc=cryptox,dc=io"</code></pre>
+
+    <h3>修改密码</h3>
+    <pre><code>ldappasswd -x -H ldap://localhost -D "cn=admin,dc=cryptox,dc=io" \
+  -w admin -s newpassword "cn=quan,dc=cryptox,dc=io"</code></pre>
+
+    <h2>六、信息汇总</h2>
+    <table>
+        <tr><th>项目</th><th>值</th></tr>
+        <tr><td>基础 DN</td><td>dc=cryptox,dc=io</td></tr>
+        <tr><td>组织名</td><td>CryptoX</td></tr>
+        <tr><td>管理员 DN</td><td>cn=admin,dc=cryptox,dc=io</td></tr>
+        <tr><td>管理员密码</td><td>admin</td></tr>
+        <tr><td>用户 DN</td><td>cn=quan,dc=cryptox,dc=io</td></tr>
+        <tr><td>LDAP 端口</td><td>389</td></tr>
+        <tr><td>MySQL 端口</td><td>3306</td></tr>
+    </table>
+
+    <h2>七、新增用户指南</h2>
+
+    <h3>7.1 创建新用户</h3>
+    <p>1. 创建用户 LDIF 文件：</p>
+    <pre><code>dn: cn=newuser,dc=cryptox,dc=io
+objectClass: inetOrgPerson
+objectClass: posixAccount
+cn: newuser
+sn: User
+uid: newuser
+uidNumber: 1001
+gidNumber: 100
+userPassword: {SSHA}生成的哈希值
+homeDirectory: /home/newuser
+loginShell: /bin/bash</code></pre>
+    <p>2. 添加用户：</p>
+    <pre><code>docker exec openldap ldapadd -x -H ldap://localhost \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin -f newuser.ldif</code></pre>
+
+    <h3>7.2 将用户添加到组</h3>
+    <pre><code>dn: cn=users,dc=cryptox,dc=io
+changetype: modify
+add: member
+member: cn=newuser,dc=cryptox,dc=io</code></pre>
+    <pre><code>docker exec openldap ldapmodify -x -H ldap://localhost \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin -f add-to-group.ldif</code></pre>
+
+    <h3>7.3 创建新组</h3>
+    <pre><code>dn: cn=developers,dc=cryptox,dc=io
+objectClass: groupOfNames
+cn: developers
+member: cn=quan,dc=cryptox,dc=io</code></pre>
+    <pre><code>docker exec openldap ldapadd -x -H ldap://localhost \
+  -D "cn=admin,dc=cryptox,dc=io" -w admin -f developers.ldif</code></pre>
+
+    <hr>
+    <p><small>本文档详细记录了 OpenLDAP 和 MySQL 的完整部署过程。</small></p>
+</body>
+</html>
